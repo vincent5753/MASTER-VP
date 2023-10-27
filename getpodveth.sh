@@ -38,14 +38,12 @@ printall(){
   echo ""
 }
 
-get_containerid vp-ubuntu-pod2-86d4c797f7-x5sxm
-get_containerpid
-get_containerifnum
-get_vethname
-printall
-
-get_containerid vp-ubuntu-pod-77d975f8c7-lhpdb
-get_containerpid
-get_containerifnum
-get_vethname
-printall
+for pod in "$@"
+do
+  echo "Pod: $pod"
+  get_containerid "$pod"
+  get_containerpid
+  get_containerifnum
+  get_vethname
+  printall
+done
