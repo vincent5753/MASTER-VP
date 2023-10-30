@@ -11,6 +11,7 @@ clang -target bpf -c XDP_DROP-ALL.c -o drop.o -O2
 sudo ip link set dev vethe102c1e6 xdpdrv obj XDP_DROP-ALL.o sec .text
 ```
 
+卸載
 ```
 sudo ip link set dev vethe102c1e6 xdp off
 ```
