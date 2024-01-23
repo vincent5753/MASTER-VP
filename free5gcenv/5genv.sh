@@ -58,6 +58,8 @@ kubectl apply -f 10-free5gc-ausf.yaml
 echo "[Deploy][5GC] Deploying WEB-UI"
 kubectl apply -f 11-free5gc-webui.yaml
 
+read -p "請於 WEB-UI 註冊後按下 ENTER 以繼續"
+
 echo "[Deploy][UERANSIM] Deploying gnb"
 kubectl apply -f ueransim/ueransim-gnb.yaml
 
