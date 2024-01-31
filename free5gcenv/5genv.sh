@@ -31,24 +31,50 @@ get_vethname(){
 }
 
 printall(){
-  echo "ContainerID: \"$ContainerID\""
-  echo "ContainerPID: \"$ContainerPID\""
-  echo "IfNum: \"$IfNum\""
-  echo "VethName: \"$VethName\""
-  echo ""
+  echo "ContainerID: \"${ContainerID}\""
+  echo "ContainerPID: \"${ContainerPID}\""
+  echo "IfNum: \"${IfNum}\""
+  echo "VethName: \"${VethName}\""
+#  echo ""
 }
 
 getpodinfobyprefix(){
-  podstatusall=$(kubectl get po -o wide | grep "$1" )
+  #echo "[Debug] podprefix \"$1\""
+  podstatusall=$(kubectl get pod -o wide | grep "$1" )
+  #echo "[Debug] podstatusall \"${podstatusall}\""
   podname=$(echo ${podstatusall} | awk -F " " '{print $1}')
   podstatus=$(echo ${podstatusall} | awk -F " " '{print $3}')
   podip=$(echo ${podstatusall} | awk -F " " '{print $6}')
+  #echo "[Debug][getpodinfobyprefix] podname: \"${podname}\" podstatus: \"${podstatus}\" podip: \"${podip}\""
+}
+
+# getpodmacaddress "free5gc-mongodb"
+getpodmacaddress(){
+  #echo "[Debug] in getpodmacaddress"
+  getpodinfobyprefix "$1"
+  podmac=$(kubectl exec -it ${podname} -- cat /sys/class/net/eth0/address)
+}
+
+# getpodinfobyprefixnamespaced ${podname} ${namespace}
+# getpodinfobyprefixnamespaced kube-flannel-ds kube-flannel
+getpodinfobyprefixnamespaced(){
+  #echo "[Debug] getpodinfobyprefixnamespaced: podname: $1 namespace: $2"
+  clear
+  echo "${grn}[Deploy][Wait]${end} Wait until pod: $1 in NameSpace: $2 is running..."
+  podstatusall=$(kubectl get pod -n "$2" -o wide | grep "$1" 2>/dev/null)
+  #echo "[Debug] kubectl get pod -n "$2" -o wide | grep "$1""
+  #echo "[Debug] ${podstatusall}"
+  podname=$(echo ${podstatusall} | awk -F " " '{print $1}')
+  podstatus=$(echo ${podstatusall} | awk -F " " '{print $3}')
+  podip=$(echo ${podstatusall} | awk -F " " '{print $6}')
+  #echo "[Debug][getpodinfobyprefixnamespaced] podname: \"${podname}\" podstatus: \"${podstatus}\" podip: \"${podip}\""
 }
 
 waituntilpodready(){
   while true
   do
-    sleep 5
+    sleep 10
+    #echo "[Debug] podnameprefix: $1"
     getpodinfobyprefix "$1"
     if [ "${podstatus}" == "Running" ]
     then
@@ -57,17 +83,45 @@ waituntilpodready(){
   done
 }
 
-read -p "${yel}[Preflightcheck]${end} 請確認運行的 Kubernetes 叢集是全新未部屬的，如果沒有問題請按 ENTER 繼續" pause
+waituntilpodreadynamespaced(){
+  #echo "[Debug] waituntilpodreadynamespaced name: $1 NS: $2"
+  while true
+  do
+#    sleep 10
+    getpodinfobyprefixnamespaced "$1" "$2"
+    if [ "${podstatus}" == "Running" ]
+    then
+     break
+    fi
+  done
+}
 
+getnodeinfo(){
+  echo "getnodeinfo"
+}
 
-echo "${yel}[Cleanup]${end} 移除 mongoDB 先前資料"
-sudo rm -rf "/mnt/mongo"
+waituntilnodeready(){
+  echo "waituntilnodeready"
+}
+
+clear
+echo "${yel}[Preflightcheck]${end} 請確認運行的 Kubernetes 叢集是全新未部屬"
+
+# 等 flannel ready 再繼續
+waituntilpodreadynamespaced "kube-flannel-ds" "kube-flannel"
+
+echo "${yel}[Cleanup]${end} 移除 mongoDB 先前資料 (/mnt/mongo/)"
+sudo rm -rf "/mnt/mongo/"
 cd free5gc/
 echo "${grn}[Deploy][5GC]${end} Deploying mongoDB"
 kubectl apply -f 01-free5gc-mongodb.yaml
-
+#echo "[Debug] sleep 60 for mongo"
+#sleep 60
 echo "${grn}[Deploy][Wait]${end} 等待 mongoDB 服務轉為 Running 狀態..."
 waituntilpodready "free5gc-mongodb"
+#echo "[Debug] getpodmacaddress"
+getpodmacaddress "free5gc-mongodb"
+#read -p "pause for debug" pause
 
 echo "${grn}[Deploy][5GC]${end} Deploying UPF"
 kubectl apply -f 02-free5gc-upf.yaml
@@ -77,9 +131,11 @@ get_containerpid
 get_containerifnum
 get_vethname
 printall
-echo "${yel}[Debug]${end} 我們先睡 30 秒，如果要監控 UPF 的 GTP-U 和 PFCP 現在快去開 tcpdump 監聽 veth"
-echo "${yel}[Debug]${end} 參考指令: sudo tcpdump -v udp port 8805 or udp port 2152 -i ${VethName}"
-sleep 30
+#echo "${yel}[Debug]${end} 我們先睡 30 秒，如果要監控 UPF 的 GTP-U 和 PFCP 現在快去開 tcpdump 監聽 veth"
+#echo "${yel}[Debug]${end} 抓 PFCP 和 GTP-U 參考指令: sudo tcpdump -v udp port 8805 or udp port 2152 -i ${VethName}"
+#echo "${yel}[Debug]${end} 抓 PFCP request 參考指令: sudo tcpdump -v src host 10.244.0.8 and udp port 8805 -i ${VethName}"
+#sleep 30
+echo "${red}[預計]${end} 之後要自動抓取 PFCP 封包並設定 timeout"
 
 # 取得 veth，在 smf 起來前要監聽 PFCP Association、Modification
 # 之後送到 UPF 的 packet 要 rewrite IP 送到新長出來的 UPF
@@ -95,16 +151,17 @@ waituntilpodready "free5gc-amf"
 echo "${grn}[Deploy][Wait]${end} 等待 AMF 服務轉為 Running 狀態..."
 
 echo "${grn}[Deploy][5GC]${end} Deploying SMF"
+#kubectl apply -f 05-free5gc-smf.yaml
 kubectl apply -f 05-free5gc-smf.yaml
-waituntilpodready "free5gc-smf"
 waituntilpodready "free5gc-smf"
 get_containerid "${podname}"
 get_containerpid
 get_containerifnum
 get_vethname
+printall
 echo "${grn}[Deploy][Wait]${end} 等待 SMF 服務轉為 Running 狀態..."
 echo "${red}[預計]${end} 之後 SMF 要 DROP 掉除了第一個 UPF 的 PFCP"
-echo "$yel[Debug]${end} SMF Veth: ${VethName}"
+echo "${yel}[Debug][SMF]${end} SMF Veth: ${VethName} IP: ${podip}"
 # 在收到 Association Response 後要 Drop 掉除了第一個 UPF 的 PFCP
 
 echo "${grn}[Deploy][5GC]${end} Deploying UDR"
@@ -138,7 +195,8 @@ waituntilpodready "free5gc-webui"
 echo "${grn}[Deploy][Wait]${end} 等待 webui 服務轉為 Running 狀態..."
 
 echo "${yel}[Debug]${end} 我們先睡 60 秒，快去 WEB-UI 註冊"
-echo "${yel}[Debug]${end} 參考網址: $(hostname -I | awk -F " " '{print $1}'):31111"
+hostip=$(hostname -I | awk -F " " '{print $1}')
+echo "${yel}[Debug]${end} 參考網址: ${hostip}:31111/#/subscriber"
 sleep 60
 
 echo "${grn}[Deploy][UERANSIM]${end} Deploying gnb"
@@ -146,6 +204,6 @@ kubectl apply -f ueransim/ueransim-gnb.yaml
 
 echo "${grn}[Deploy][UERANSIM]${end} Deploying ue"
 kubectl apply -f ueransim/ueransim-ue.yaml
-
 waituntilpodready "ueransim-ue"
+echo "${yel}[Debug][UE]${end} UE 內網路介面如下"
 kubectl exec -it ${podname} -- ip a
