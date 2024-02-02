@@ -1,5 +1,12 @@
 # eBPF
 獲取 `veth` 請參考 [getpodveth.sh](https://github.com/vincent5753/MASTER-VP/blob/main/getpodveth.sh)
+
+## ENV setup
+```
+sudo apt install -y clang llvm libbpf-dev libelf-dev libpcap-dev gcc-multilib build-essential
+sudo apt install -y linux-headers-$(uname -r) linux-tools-common linux-tools-generic linux-tools-$(uname -r)
+```
+
 ## XDP_DROP-ALL
 編譯
 ```
