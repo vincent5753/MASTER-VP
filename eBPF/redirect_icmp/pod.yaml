@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ping-1-privileged
+spec:
+  containers:
+  - name: ping-1-privileged
+    image: ubuntu20.04
+    command: ["sleep", "infinity"]
+    securityContext:
+      privileged: true
+
+---
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ping-2-privileged
+spec:
+  containers:
+  - name: ping-2-privileged
+    image: ubuntu20.04
+    command: ["sleep", "infinity"]
+    securityContext:
+      privileged: true
+
+---
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ping-3-privileged
+spec:
+  containers:
+  - name: ping-3-privileged
+    image: ubuntu20.04
+    command: ["sleep", "infinity"]
+    securityContext:
+      privileged: true
