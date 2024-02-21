@@ -18,10 +18,16 @@ do
   ipincontainer=$(sudo nsenter -t "$containerpid" -n ip -4 addr show eth0 | grep inet | awk -F " " '{print $2}' | awk -F "/" '{print $1}')
   vethname=$(ip a | grep "${ifnum}: " | cut -d '@' -f 1 | cut -d ' ' -f 2)
   echo "ID: ${containerid} PID: ${containerpid} ifnum: ${ifnum} vethname: ${vethname} IPinContainer: ${ipincontainer} NAME: ${containername}"
-  # Enable NAPI and disable checksum offload/verify and rp_filter
+  # Enable NAPI and disable checksum offload/verify
   sudo ethtool -K "${vethname}" gro on
+  sudo nsenter -t "${containerpid}" -n ethtool -K eth0 gro on
+  echo "sudo nsenter -t \"${containerpid}\" -n ethtool -K eth0 gro on"
   sudo ethtool -K "${vethname}" tx off
+  sudo nsenter -t "${containerpid}" -n ethtool -K eth0 tx off
+  echo "sudo nsenter -t \"${containerpid}\" -n ethtool -K eth0 tx off"
   sudo ethtool -K "${vethname}" rx off
+  sudo nsenter -t "${containerpid}" -n ethtool -K eth0 rx off
+  echo "sudo nsenter -t \"${containerpid}\" -n ethtool -K eth0 rx off"
   echo 0 | sudo tee /proc/sys/net/ipv4/conf/${vethname}/rp_filter
   case "$containername" in
     "client")
@@ -39,7 +45,7 @@ do
   esac
 done < <(echo "$containers")
 
-mode="xdpdrv"
+mode="xdpgeneric"
 lbxdp="xdp_lb_kern.o"
 dummyxdp="justpass.o"
 
@@ -47,22 +53,22 @@ dummyxdp="justpass.o"
 echo "update XDP for client"
 sudo ip link set dev ${clientnic} xdp off
 sudo ip link set dev ${clientnic} xdpgeneric off
-sudo ip link set dev ${clientnic} ${mode} obj ${dummyxdp} sec justpass
+#sudo ip link set dev ${clientnic} ${mode} obj ${dummyxdp} sec justpass
 
 # LB
 echo "update XDP for LB"
 sudo ip link set dev ${lbnic} xdp off
 sudo ip link set dev ${lbnic} xdpgeneric off
-sudo ip link set dev ${lbnic} ${mode} obj ${lbxdp} sec xdp_lb
+#sudo ip link set dev ${lbnic} ${mode} obj ${lbxdp} sec xdp_lb
 
 # nginx2
 echo "update XDP for nginx2"
 sudo ip link set dev ${nginx2nic} xdp off
 sudo ip link set dev ${nginx2nic} xdpgeneric off
-sudo ip link set dev ${nginx2nic} ${mode} obj ${dummyxdp} sec justpass
+#sudo ip link set dev ${nginx2nic} ${mode} obj ${dummyxdp} sec justpass
 
 # nginx1
 echo "update XDP for nginx1"
 sudo ip link set dev ${nginx1nic} xdp off
 sudo ip link set dev ${nginx1nic} xdpgeneric off
-sudo ip link set dev ${nginx1nic} ${mode} obj ${dummyxdp} sec justpass
+#sudo ip link set dev ${nginx1nic} ${mode} obj ${dummyxdp} sec justpass
