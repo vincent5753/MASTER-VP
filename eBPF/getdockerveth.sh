@@ -81,6 +81,8 @@ do
 
   else
     echo "[eBPF][tc] No tc-clsact on ${vethname}!"
+    echo "[eBPF][tc] To add eBPF hook point onto tc, use following command:"
+    echo "[eBPF][tc]   sudo tc qdisc add dev ${vethname} clsact"
   fi
   echo ""
 done < <(echo "$containers")
