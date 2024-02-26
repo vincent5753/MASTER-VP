@@ -40,8 +40,6 @@ int cls_info(struct __sk_buff *skb)
     bpf_printk("  timestamp: %llu\n", ts);
     bpf_printk("  ifindex: %d\n", skb->ifindex);
     bpf_printk("  ingress_ifindex: %d\n",skb->ingress_ifindex);
-    bpf_printk("  local_ip4: %d\n",skb->local_ip4);
-    bpf_printk("  remote_ip4: %d\n",skb->remote_ip4);
     bpf_printk("  Source[0]: %x\n", eth->h_source[0]);
     bpf_printk("  Source[1]: %x\n", eth->h_source[1]);
     bpf_printk("  Source[2]: %x\n", eth->h_source[2]);
