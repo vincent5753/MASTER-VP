@@ -15,7 +15,7 @@ do
   ifnum=$(sudo nsenter -t "$containerpid" -n ip addr | grep "eth0@" | cut -d '@' -f 2 | cut -d ':' -f 1 | sed 's/if//g')
   ipincontainer=$(sudo nsenter -t "$containerpid" -n ip -4 addr show eth0 | grep inet | awk -F " " '{print $2}' | awk -F "/" '{print $1}')
   vethname=$(ip a | grep "${ifnum}: " | cut -d '@' -f 1 | cut -d ' ' -f 2)
-  echo "[Info] ID: ${containerid} PID: ${containerpid} ifnum: ${ifnum} vethname: ${yel}${vethname}${end} IPinContainer: ${ipincontainer} NAME: ${containername}"
+  echo "[Info] ID: ${containerid} PID: ${containerpid} ifnum: ${yel}${ifnum}${end} vethname: ${yel}${vethname}${end} IPinContainer: ${ipincontainer} NAME: ${containername}"
   nicebpf=$(ip a | grep ${vethname})
   xdpdrvresult=$(echo ${nicebpf} | grep "xdp/")
   xdpgenericresult=$(echo ${nicebpf} | grep "xdpgeneric/")
