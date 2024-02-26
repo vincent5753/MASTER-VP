@@ -64,11 +64,11 @@ do
         uid=$(echo "${line}" | awk -F " " '{print $15}')
         tag=$(echo "${line}" | awk -F " " '{print $17}')
         echo "[eBPF][tc] To ${red}detach${end}, use following command:"
-        echo "[eBPF][tc]   sudo tc filter del dev ${vethname} ingress pref ${pref} handle 0x1 bpf"
+        echo "[eBPF][tc]   ${yel}sudo tc filter del dev ${vethname} ingress pref ${pref} handle 0x1 bpf${end}"
       done <<< "${inebpfresult}"
     else
-     echo "[eBPF][tc] To ${grn}attach${end} eBPF onto tc, use following command:"
-     echo "[eBPF][tc]    sudo tc filter add dev ${vethname} ingress bpf da obj \${objname}.o sec \${secname}"
+      echo "[eBPF][tc] To ${grn}attach${end} eBPF onto tc, use following command:"
+      echo "[eBPF][tc]    ${yel}sudo tc filter add dev ${vethname} ingress bpf da obj${end} \${objname}.o sec \${secname}"
     fi
     echo "[eBPF][tc]"
 
@@ -82,12 +82,12 @@ do
         uid=$(echo "${line}" | awk -F " " '{print $15}')
         tag=$(echo "${line}" | awk -F " " '{print $17}')
         echo "[eBPF][tc] To ${red}detach${end}, use following command:"
-        echo "[eBPF][tc]   sudo tc filter del dev ${vethname} egress pref ${pref} handle 0x1 bpf"
+        echo "[eBPF][tc]   ${yel}sudo tc filter del dev ${vethname} egress pref ${pref} handle 0x1 bpf${end}"
 #        echo "[eBPF][tc]"
       done <<< "${eebpfresult}"
     else
-     echo "[eBPF][tc] To ${grn}attach${end} eBPF onto tc, use following command:"
-     echo "[eBPF][tc]    sudo tc filter add dev ${vethname} egress bpf da obj \${objname}.o sec \${secname}"
+      echo "[eBPF][tc] To ${grn}attach${end} eBPF onto tc, use following command:"
+      echo "[eBPF][tc]    sudo tc filter add dev ${vethname} egress bpf da obj \${objname}.o sec \${secname}"
     fi
     echo "[eBPF][tc]"
 
