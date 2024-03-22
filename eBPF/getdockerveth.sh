@@ -12,6 +12,7 @@ do
   containerid=$(echo ${line} | awk -F " " '{print $1}')
   containername=$(echo ${line} | awk -F " " '{print $2}')
   containerpid=$(docker inspect --format '{{.State.Pid}}' "${containerid}")
+    # if the container exited
     if [ "${containerpid}" -eq 0 ]
     then
       break
