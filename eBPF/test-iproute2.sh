@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Do this first.
+# curl https://mirrors.edge.kernel.org/pub/linux/utils/net/iproute2/ --silent | grep "tar.xz" | awk -F '"' '{print $2}' > iproute2-versionlist
+
 versionlist="iproute2-versionlist"
 sweethome="/home/vp/"
 resultfile="/home/vp/iproute2-result"
