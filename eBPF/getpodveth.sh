@@ -33,7 +33,7 @@ get_containerifnum(){
 
 get_vethname(){
 #  echo "[Func] get_vethname"
-  VethName=$(ip a | grep "${IfNum}: " | cut -d '@' -f 1 | cut -d ' ' -f 2)
+  VethName=$(ip a | grep -E "^${IfNum}: " | cut -d '@' -f 1 | cut -d ' ' -f 2)
   #echo "VethName: $VethName"
 }
 
