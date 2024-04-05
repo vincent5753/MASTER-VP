@@ -1,6 +1,8 @@
 #!/bin/bash
 # By VP@231027, tested on ubuntu_20.04
 # ref: https://stackoverflow.com/questions/70972594/kubernetes-bridge-networking-issue
+# support for containerd by VP@240405
+# ref: https://stackoverflow.com/questions/70948748/how-to-retrieve-the-pod-container-in-which-run-a-given-process
 
 red=$'\e[1;31m'
 grn=$'\e[1;32m'
@@ -19,7 +21,15 @@ get_containerid(){
   #echo "ContainerID: $ContainerID"
 }
 
-get_containerpid(){
+get_cri(){
+  cri=$(kubectl describe po "$1" | grep "Container ID" | cut -d ':' -f 2 | sed 's/\ //g')
+}
+
+get_containerpid_containerd(){
+  ContainerPID=$(sudo crictl inspect 5c415e9de73a4b21d58e2a6d8aa6467634eb7b670018e05b3c4f1ea6eb66734 | jq -c ".info.pid")
+}
+
+get_containerpid_docker(){
 #  echo "[Func] get_containerpid"
   ContainerPID=$(docker inspect --format '{{.State.Pid}}' "$ContainerID")
   #echo "ContainerPID: $ContainerPID"
@@ -127,8 +137,14 @@ printall(){
 for pod in "$@"
 do
   echo "Pod: ${pod}"
+  get_cri "${pod}"
   get_containerid "${pod}"
-  get_containerpid
+  if [ "${cri}" == "containerd" ]
+  then
+    get_containerpid_containerd
+  else
+    get_containerpid_docker
+  fi
   get_containerifnum
   get_vethname
   get_macaddress "${pod}"
