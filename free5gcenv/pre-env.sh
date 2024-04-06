@@ -8,9 +8,9 @@ sudo apt install -y linux-headers-$(uname -r) linux-tools-common linux-tools-gen
 sudo apt install -y clang libmnl-dev bison flex pkg-config
 
 # upgrade and compile iproute2 to support BTF
-wget https://mirrors.edge.kernel.org/pub/linux/utils/net/iproute2/iproute2-6.8.0.tar.xz
-tar xvJf iproute2-6.8.0.tar.xz
-cd iproute2-6.8.0
+wget https://mirrors.edge.kernel.org/pub/linux/utils/net/iproute2/iproute2-5.18.0.tar.xz
+tar xvJf iproute2-5.18.0.tar.xz
+cd iproute2-5.18.0
 ./configure --libbpf_force on --prefix=/usr --color always
 make
 sudo make install
