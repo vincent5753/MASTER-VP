@@ -26,7 +26,7 @@ get_cri(){
 }
 
 get_containerpid_containerd(){
-  ContainerPID=$(sudo crictl inspect 5c415e9de73a4b21d58e2a6d8aa6467634eb7b670018e05b3c4f1ea6eb66734 | jq -c ".info.pid")
+  ContainerPID=$(sudo crictl inspect "${ContainerID}" | jq -c ".info.pid")
 }
 
 get_containerpid_docker(){
