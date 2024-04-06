@@ -21,3 +21,4 @@ sudo apt install -y gcc make
 cd gtp5g
 make clean && sudo make
 sudo make install
+cat /etc/modules-load.d/gtp5g.conf
