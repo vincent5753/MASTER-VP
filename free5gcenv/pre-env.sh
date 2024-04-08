@@ -22,3 +22,6 @@ cd gtp5g
 make clean && sudo make
 sudo make install
 cat /etc/modules-load.d/gtp5g.conf
+
+# getpodveth dependency
+sudo apt install -y jq
