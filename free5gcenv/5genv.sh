@@ -248,7 +248,7 @@ kubectl apply -f ueransim/ueransim-gnb.yaml
 
 sed -i "s/10.244.0.15/${gnbip}/g" ueransim/ueransim-ue.yaml
 echo "${grn}[Deploy][UERANSIM]${end} Deploying ue"
-sleep 20
+sleep 30
 kubectl apply -f ueransim/ueransim-ue.yaml
 waituntilpodready "ueransim-ue"
 echo "${yel}[Debug][UE]${end} UE 內網路介面如下"
