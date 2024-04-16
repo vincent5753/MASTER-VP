@@ -237,11 +237,17 @@ curl "http://${hostip}:31111/api/subscriber" \
   -H 'X-Requested-With: XMLHttpRequest' \
   --insecure
 
-
+IFS=. read -r i1 i2 i3 i4 <<< "${webuiip}"
+gnbip=$(printf "%d.%d.%d.%d\n" "${i1}" "${i2}" "${i3}" "$((i4 + 1))")
+echo "gnbip: ${gnbip}"
+sed -i "s/10.244.0.7/${amfip}/g" ueransim/ueransim-gnb.yaml
+sed -i "s/10.244.0.15/${gnbip}/g" ueransim/ueransim-gnb.yaml
 echo "${grn}[Deploy][UERANSIM]${end} Deploying gnb"
 kubectl apply -f ueransim/ueransim-gnb.yaml
 
+sed -i "s/10.244.0.15/${gnbip}/g" ueransim/ueransim-ue.yaml
 echo "${grn}[Deploy][UERANSIM]${end} Deploying ue"
+sleep 20
 kubectl apply -f ueransim/ueransim-ue.yaml
 waituntilpodready "ueransim-ue"
 echo "${yel}[Debug][UE]${end} UE 內網路介面如下"
