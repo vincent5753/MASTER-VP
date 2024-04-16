@@ -147,8 +147,11 @@ waituntilpodready "free5gc-nrf"
 
 echo "${grn}[Deploy][5GC]${end} Deploying AMF"
 kubectl apply -f 04-free5gc-amf.yaml
-waituntilpodready "free5gc-amf"
 echo "${grn}[Deploy][Wait]${end} 等待 AMF 服務轉為 Running 狀態..."
+waituntilpodready "free5gc-amf"
+getpodinfobyprefix "free5gc-amf"
+amfip="${podip}"
+echo "amfip: ${amfip}"
 
 echo "${grn}[Deploy][5GC]${end} Deploying SMF"
 #kubectl apply -f 05-free5gc-smf.yaml
@@ -160,8 +163,8 @@ get_containerifnum
 get_vethname
 printall
 echo "${grn}[Deploy][Wait]${end} 等待 SMF 服務轉為 Running 狀態..."
-echo "${red}[預計]${end} 之後 SMF 要 DROP 掉除了第一個 UPF 的 PFCP"
-echo "${yel}[Debug][SMF]${end} SMF Veth: ${VethName} IP: ${podip}"
+# echo "${red}[預計]${end} 之後 SMF 要 DROP 掉除了第一個 UPF 的 PFCP"
+# echo "${yel}[Debug][SMF]${end} SMF Veth: ${VethName} IP: ${podip}"
 # 在收到 Association Response 後要 Drop 掉除了第一個 UPF 的 PFCP
 
 echo "${grn}[Deploy][5GC]${end} Deploying UDR"
@@ -186,13 +189,16 @@ echo "${grn}[Deploy][Wait]${end} 等待 NSSF 服務轉為 Running 狀態..."
 
 echo "${grn}[Deploy][5GC]${end} Deploying AUSF"
 kubectl apply -f 10-free5gc-ausf.yaml
-waituntilpodready "free5gc-ausf"
 echo "${grn}[Deploy][Wait]${end} 等待 AUSF 服務轉為 Running 狀態..."
+waituntilpodready "free5gc-ausf"
 
 echo "${grn}[Deploy][5GC]${end} Deploying WEB-UI"
 kubectl apply -f 11-free5gc-webui.yaml
-waituntilpodready "free5gc-webui"
 echo "${grn}[Deploy][Wait]${end} 等待 webui 服務轉為 Running 狀態..."
+waituntilpodready "free5gc-webui"
+getpodinfobyprefix "free5gc-webui"
+webuiip="${podip}"
+echo "webuiip: ${webuiip}"
 
 echo "${yel}[Debug]${end} 我們先睡 60 秒，快去 WEB-UI 註冊"
 hostip=$(hostname -I | awk -F " " '{print $1}')
