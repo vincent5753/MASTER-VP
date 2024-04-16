@@ -237,6 +237,7 @@ curl "http://${hostip}:31111/api/subscriber" \
   -H 'X-Requested-With: XMLHttpRequest' \
   --insecure
 
+# ref: https://stackoverflow.com/questions/15429420/given-the-ip-and-netmask-how-can-i-calculate-the-network-address-using-bash
 IFS=. read -r i1 i2 i3 i4 <<< "${webuiip}"
 gnbip=$(printf "%d.%d.%d.%d\n" "${i1}" "${i2}" "${i3}" "$((i4 + 1))")
 echo "gnbip: ${gnbip}"
