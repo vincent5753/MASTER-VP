@@ -1,6 +1,7 @@
 #!/bin/bash
 # ip ref: https://stackoverflow.com/questions/10768160/ip-address-converter
 # jq ref: https://stackoverflow.com/questions/34226370/jq-print-key-and-value-for-each-entry-in-an-object
+# check ip in dec or std format: https://www.abuseipdb.com/tools/ip-address-converter
 
 ip2dec(){ # Convert an IPv4 IP number to its decimal equivalent.
           declare -i a b c d;
