@@ -63,7 +63,7 @@ int pkgcounter(struct __sk_buff *skb) {
     /* ===== Process ===== */
     int *valueptr;
     uint64_t initval = skb->len;
-    int key = ntohs(ip2->daddr);
+    int key = ip2->daddr;
 
     // ----- save ip -----
     valueptr = bpf_map_lookup_elem(&hash_map_4_ip, &key);

@@ -16,7 +16,10 @@ dec2ip(){ # Convert an IPv4 decimal IP value to an IPv4 IP.
         }
 
 #iplist_ori=$(sudo bpftool map dump id 60 | jq -c -r '.[] | .value')
+
+# hash_map_4_ip
 iplist_ori=$(sudo bpftool map dump id 60 | jq -c -r '.[] | [.key, .value] | @tsv' | awk -F ' ' '{print $1 " " $2}')
+# hash_map_4_traf
 traffic_list=$(sudo bpftool map dump id 61 | jq -c -r '.[] | [.key, .value] | @tsv' | awk -F ' ' '{print $1 " " $2}')
 
 while IFS= read -r line
