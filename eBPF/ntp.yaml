@@ -1,10 +1,10 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: ntp-server
+  name: svr
 spec:
   containers:
-  - name: ntp-server
+  - name: svr
     image: cturra/ntp
     ports:
       - containerPort: 123
@@ -15,10 +15,10 @@ spec:
 apiVersion: v1
 kind: Pod
 metadata:
-  name: loadbalancer
+  name: lb
 spec:
   containers:
-  - name: loadbalancer
+  - name: lb
     image: nginx
 
 ---
@@ -26,8 +26,8 @@ spec:
 apiVersion: v1
 kind: Pod
 metadata:
-  name: client
+  name: cli
 spec:
   containers:
-  - name: client
+  - name: cli
     image: nginx
