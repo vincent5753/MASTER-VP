@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ntp-server
+spec:
+  containers:
+  - name: ntp-server
+    image: cturra/ntp
+    ports:
+      - containerPort: 123
+        protocol: UDP
+
+---
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: loadbalancer
+spec:
+  containers:
+  - name: loadbalancer
+    image: nginx
+
+---
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: client
+spec:
+  containers:
+  - name: client
+    image: nginx
