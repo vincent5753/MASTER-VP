@@ -95,7 +95,7 @@ spec:
     spec:
       containers:
       - name: ueransim-ue
-        image: free5gmano/ueransim:v3.2.5
+        image: vincent5753/ueransim:v3.2.5
         securityContext:
           privileged: true
         command: ["/bin/bash", "-c"]
