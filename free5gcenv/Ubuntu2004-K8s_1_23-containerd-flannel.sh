@@ -52,7 +52,6 @@ kubectl apply -f https://raw.githubusercontent.com/flannel-io/flannel/master/Doc
 
 ### Waiting until Ready
 kubectl cluster-info
-watch -n 1 kubectl get nodes -o wide
 
 ### Taint(if needed)
 kubectl taint nodes --all node-role.kubernetes.io/master-
