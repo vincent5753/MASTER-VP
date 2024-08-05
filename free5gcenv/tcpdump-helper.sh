@@ -1,6 +1,8 @@
 #!/bin/bash
 # Made by GB
 
+rm *.pcap
+
 while true; do
     sleep 1
     podstatus=$(kubectl get pod -l app=free5gc-upf -o wide | grep "free5gc-upf"  | awk -F " " '{print $3}')
