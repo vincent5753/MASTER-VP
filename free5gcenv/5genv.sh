@@ -107,6 +107,8 @@ waituntilnodeready(){
 clear
 echo "${yel}[Preflightcheck]${end} 請確認運行的 Kubernetes 叢集是全新未部屬"
 
+curpath=$(pwd)
+
 # 等 flannel ready 再繼續
 waituntilpodreadynamespaced "kube-flannel-ds" "kube-flannel"
 
@@ -131,11 +133,15 @@ get_containerpid
 get_containerifnum
 get_vethname
 printall
+
 #echo "${yel}[Debug]${end} 我們先睡 30 秒，如果要監控 UPF 的 GTP-U 和 PFCP 現在快去開 tcpdump 監聽 veth"
 #echo "${yel}[Debug]${end} 抓 PFCP 和 GTP-U 參考指令: sudo tcpdump -v udp port 8805 or udp port 2152 -i ${VethName}"
 #echo "${yel}[Debug]${end} 抓 PFCP request 參考指令: sudo tcpdump -v src host 10.244.0.8 and udp port 8805 -i ${VethName}"
 #sleep 30
-echo "${red}[預計]${end} 之後要自動抓取 PFCP 封包並設定 timeout"
+
+echo "${red}[Debug]${end} sudo nohub tcpdump -U -i ${VethName} ip -v -w $(pwd)/pfcp.pcap"
+sudo nohup tcpdump -U -i ${VethName} ip -v -w ${curpath}/pfcp.pcap &
+#sudo tcpdump -U -i ${VethName} ip -v -w $(pwd)/pfcp.pcap &
 
 # 取得 veth，在 smf 起來前要監聽 PFCP Association、Modification
 # 之後送到 UPF 的 packet 要 rewrite IP 送到新長出來的 UPF
@@ -251,5 +257,9 @@ echo "${grn}[Deploy][UERANSIM]${end} Deploying ue"
 sleep 30
 kubectl apply -f ueransim/ueransim-ue.yaml
 waituntilpodready "ueransim-ue"
-echo "${yel}[Debug][UE]${end} UE 內網路介面如下"
+echo "${yel}[UE]${end} UE 內網路介面如下"
+echo "kubectl exec -it ${podname} -- bash"
 kubectl exec -it ${podname} -- ip a
+
+sudo kill -15 $(pidof tcpdump)
+sudo chown vp:vp pfcp.pcap
