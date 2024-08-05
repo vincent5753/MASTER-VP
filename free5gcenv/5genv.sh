@@ -104,6 +104,25 @@ waituntilnodeready(){
   echo "waituntilnodeready"
 }
 
+update_helper_info(){
+  UPFLBName2replace=$(kubectl get pods -l app=free5gc-upf --no-headers -o custom-columns=":metadata.name")
+  UPF1Name2replace=$(kubectl get pods -l app=free5gc-upf-1 --no-headers -o custom-columns=":metadata.name")
+  UPF2Name2replace=$(kubectl get pods -l app=free5gc-upf-2 --no-headers -o custom-columns=":metadata.name")
+  UPF3Name2replace=$(kubectl get pods -l app=free5gc-upf-3 --no-headers -o custom-columns=":metadata.name")
+  UEName2replace=$(kubectl get pods -l app=ueransim-ue --no-headers -o custom-columns=":metadata.name")
+  get_containerid "${UPFLBName2replace}"
+  get_containerpid
+  get_containerifnum
+  get_vethname
+  LBVeth2replace="${VethName}"
+  sed -i "s/UPFLBName2replace/${UPFLBName2replace}/g" helper.sh
+  sed -i "s/UPF1Name2replace/${UPF1Name2replace}/g" helper.sh
+  sed -i "s/UPF2Name2replace/${UPF2Name2replace}/g" helper.sh
+  sed -i "s/UPF3Name2replace/${UPF3Name2replace}/g" helper.sh
+  sed -i "s/UEName2replace/${UEName2replace}/g" helper.sh
+  sed -i "s/LBVeth2replace/${LBVeth2replace}/g" helper.sh
+}
+
 clear
 echo "${yel}[Preflightcheck]${end} 請確認運行的 Kubernetes 叢集是全新未部屬"
 
@@ -262,4 +281,13 @@ echo "kubectl exec -it ${podname} -- bash"
 kubectl exec -it ${podname} -- ip a
 
 sudo kill -15 $(pidof tcpdump)
-sudo chown vp:vp pfcp.pcap
+sudo chown vp:vp ${curpath}/pfcp.pcap
+
+cd ${curpath}
+bash helper_template.sh deployupf
+[ -f "helper.sh" ] && rm "helper.sh"
+cp helper_template.sh helper.sh
+sleep 30
+bash apply_pfcp.sh
+
+update_helper_info
