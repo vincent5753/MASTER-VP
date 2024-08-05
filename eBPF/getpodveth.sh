@@ -48,7 +48,14 @@ get_vethname(){
 }
 
 get_macaddress(){
-  macaddr=$(kubectl exec -it $1 -- cat /sys/class/net/eth0/address)
+# 不知為啥有 bug
+#  macaddr="$(kubectl exec -it $1 -- cat /sys/class/net/eth0/address)"
+  macaddr=$(kubectl exec -it "$1" -- ip a show eth0 | grep 'ether\ ' | awk '{print $2}' | cut -d '/' -f 1)
+#  echo "\"${macaddr}\""
+}
+
+get_ipaddr(){
+  ipaddr=$(kubectl exec -it $1 -- ip a show eth0 | grep 'inet\ ' | awk '{print $2}' | cut -d '/' -f 1)
 }
 
 get_nicbpf(){
@@ -131,7 +138,60 @@ printall(){
   echo "ContainerPID: \"${ContainerPID}\""
   echo "IfNum: \"${IfNum}\""
   echo "VethName: \"${VethName}\""
-  echo "MAC Address: ${macaddr}"
+  echo "MAC Address: \"${macaddr}\""
+  echo "IP Address: ${ipaddr}"
+}
+
+gen_clang_header(){
+template="
+    {
+        .name = \"UPF2Replace\",
+        .ifnum = ifnum2replace,
+        .mac = {0xx1, 0xx2, 0xx3, 0xx4, 0xx5, 0xx6},
+        .ipv4 = 10 | (244 << 8) | (0 << 16) | (IP4 << 24)
+    },
+"
+#echo "${template}"
+
+UPF2Replace="UPF1"
+ifnum2replace="${IfNum}"
+macaddr="${macaddr}"
+
+template=$(echo ${template} | sed "s/UPF2Replace/${UPF2Replace}/g")
+template=$(echo ${template} | sed "s/ifnum2replace/${ifnum2replace}/g")
+#echo "${template}"
+
+# 我知道有 for 迴圈這種東西
+mac1="0x$(echo "${macaddr}" | awk -F ":" '{print $1}')"
+#echo "\"${mac1}\""
+mac2="0x$(echo "${macaddr}" | awk -F ":" '{print $2}')"
+#echo "\"${mac2}\""
+mac3="0x$(echo "${macaddr}" | awk -F ":" '{print $3}')"
+#echo "\"${mac3}\""
+mac4="0x$(echo "${macaddr}" | awk -F ":" '{print $4}')"
+#echo "\"${mac4}\""
+mac5="0x$(echo "${macaddr}" | awk -F ":" '{print $5}')"
+#echo "\"${mac5}\""
+mac6="0x$(echo "${macaddr}" | awk -F ":" '{print $6}')"
+#echo "\"${mac6}\""
+
+#echo "${template}"
+template=$(echo "${template}" | sed "s/0xx1/${mac1}/g")
+#echo "${template}"
+template=$(echo "${template}" | sed "s/0xx2/${mac2}/g")
+#echo "${template}"
+template=$(echo "${template}" | sed "s/0xx3/${mac3}/g")
+#echo "${template}"
+template=$(echo "${template}" | sed "s/0xx4/${mac4}/g")
+#echo "${template}"
+template=$(echo "${template}" | sed "s/0xx5/${mac5}/g")
+#echo "${template}"
+template=$(echo "${template}" | sed "s/0xx6/${mac6}/g")
+#echo "${template}"
+
+IP4=$(echo "${ipaddr}" | awk -F "." '{print $NF}')
+template=$(echo "${template}" | sed "s/IP4/${IP4}/g")
+echo "${template}"
 }
 
 for pod in "$@"
@@ -148,8 +208,10 @@ do
   get_containerifnum
   get_vethname
   get_macaddress "${pod}"
+  get_ipaddr "${pod}"
   printall
   get_nicbpf
   get_tcbpf
+  gen_clang_header
   echo ""
 done
