@@ -123,6 +123,27 @@ update_helper_info(){
   sed -i "s/LBVeth2replace/${LBVeth2replace}/g" helper.sh
 }
 
+update_myhelper_header_info(){
+  UPFLBName=$(kubectl get pods -l app=free5gc-upf --no-headers -o custom-columns=":metadata.name")
+  UPF1Name=$(kubectl get pods -l app=free5gc-upf-1 --no-headers -o custom-columns=":metadata.name")
+  UPF2Name=$(kubectl get pods -l app=free5gc-upf-2 --no-headers -o custom-columns=":metadata.name")
+  UPF3Name=$(kubectl get pods -l app=free5gc-upf-3 --no-headers -o custom-columns=":metadata.name")
+  gNBName=$(kubectl get pods -l app=ueransim-gnb --no-headers -o custom-columns=":metadata.name")
+  UEName=$(kubectl get pods -l app=ueransim-ue --no-headers -o custom-columns=":metadata.name")
+  LBInterface2replace=$(bash "${UPFLBName}")
+  UPF1Interface2replace=$(bash "${UPF1Name}")
+  UPF2Interface2replace=$(bash "${UPF2Name}")
+  UPF3Interface2replace=$(bash "${UPF3Name}")
+  gNBInterface2replace=$(bash "${gNBName}")
+  UEInterface2replace=$(bash "${UEName}")
+  sed -i "s/LBInterface2replace/${LBInterface2replace}/g" myhelper.h
+  sed -i "s/UPF1Interface2replace/${UPF1Interface2replace}/g" myhelper.h
+  sed -i "s/UPF2Interface2replace/${UPF2Interface2replace}/g" myhelper.h
+  sed -i "s/UPF3Interface2replace/${UPF3Interface2replace}/g" myhelper.h
+  sed -i "s/gNBInterface2replace/${gNBInterface2replace}/g" myhelper.h
+  sed -i "s/UEInterface2replace/${UEInterface2replace}/g" myhelper.h
+}
+
 clear
 echo "${yel}[Preflightcheck]${end} 請確認運行的 Kubernetes 叢集是全新未部屬"
 
@@ -291,3 +312,7 @@ sleep 30
 bash apply_pfcp.sh
 
 update_helper_info
+
+[ -f "myhelper.h" ] && rm "myhelper.h"
+cp myhelper_template.h myhelper.h
+update_myhelper_header_info
