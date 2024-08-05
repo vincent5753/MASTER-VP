@@ -130,12 +130,12 @@ update_myhelper_header_info(){
   UPF3Name=$(kubectl get pods -l app=free5gc-upf-3 --no-headers -o custom-columns=":metadata.name")
   gNBName=$(kubectl get pods -l app=ueransim-gnb --no-headers -o custom-columns=":metadata.name")
   UEName=$(kubectl get pods -l app=ueransim-ue --no-headers -o custom-columns=":metadata.name")
-  LBInterface2replace=$(bash "${UPFLBName}")
-  UPF1Interface2replace=$(bash "${UPF1Name}")
-  UPF2Interface2replace=$(bash "${UPF2Name}")
-  UPF3Interface2replace=$(bash "${UPF3Name}")
-  gNBInterface2replace=$(bash "${gNBName}")
-  UEInterface2replace=$(bash "${UEName}")
+  LBInterface2replace=$(bash convert2myhelperh.sh "${UPFLBName}")
+  UPF1Interface2replace=$(bash convert2myhelperh.sh "${UPF1Name}")
+  UPF2Interface2replace=$(bash convert2myhelperh.sh "${UPF2Name}")
+  UPF3Interface2replace=$(bash convert2myhelperh.sh "${UPF3Name}")
+  gNBInterface2replace=$(bash convert2myhelperh.sh "${gNBName}")
+  UEInterface2replace=$(bash convert2myhelperh.sh "${UEName}")
   sed -i "s/LBInterface2replace/${LBInterface2replace}/g" myhelper.h
   sed -i "s/UPF1Interface2replace/${UPF1Interface2replace}/g" myhelper.h
   sed -i "s/UPF2Interface2replace/${UPF2Interface2replace}/g" myhelper.h
