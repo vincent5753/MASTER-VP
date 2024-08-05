@@ -16,6 +16,7 @@ end=$'\e[0m'
 
 get_containerid(){
 #  echo "[Func] get_containerid"
+  PodName="$1"
   echo "PodName: $1"
   ContainerID=$(kubectl describe po "$1" | grep "Container ID" | cut -d '/' -f 3)
   #echo "ContainerID: $ContainerID"
@@ -143,6 +144,10 @@ printall(){
 }
 
 gen_clang_header(){
+# variables ref
+#   ${PodName} -> Name of Pod
+#   ${ipaddr}  -> IP addr of Pod
+
 template="
     {
         .name = \"UPF2Replace\",
@@ -151,46 +156,146 @@ template="
         .ipv4 = 10 | (244 << 8) | (0 << 16) | (IP4 << 24)
     },
 "
-#echo "${template}"
 
-UPF2Replace="UPF1"
+# for last UPF replica (in our case is UPF 3)
+template_no_comma="
+    {
+        .name = \"UPF2Replace\",
+        .ifnum = ifnum2replace,
+        .mac = {0xx1, 0xx2, 0xx3, 0xx4, 0xx5, 0xx6},
+        .ipv4 = 10 | (244 << 8) | (0 << 16) | (IP4 << 24)
+    }
+"
+
+template_no_braces="
+.name = \"UPF2Replace\", .ifnum = ifnum2replace, .mac = {0xx1, 0xx2, 0xx3, 0xx4, 0xx5, 0xx6}, .ipv4 = 10 | (244 << 8) | (0 << 16) | (IP4 << 24)
+"
+
 ifnum2replace="${IfNum}"
 macaddr="${macaddr}"
 
-template=$(echo ${template} | sed "s/UPF2Replace/${UPF2Replace}/g")
-template=$(echo ${template} | sed "s/ifnum2replace/${ifnum2replace}/g")
-#echo "${template}"
-
 # 我知道有 for 迴圈這種東西
 mac1="0x$(echo "${macaddr}" | awk -F ":" '{print $1}')"
-#echo "\"${mac1}\""
 mac2="0x$(echo "${macaddr}" | awk -F ":" '{print $2}')"
-#echo "\"${mac2}\""
 mac3="0x$(echo "${macaddr}" | awk -F ":" '{print $3}')"
-#echo "\"${mac3}\""
 mac4="0x$(echo "${macaddr}" | awk -F ":" '{print $4}')"
-#echo "\"${mac4}\""
 mac5="0x$(echo "${macaddr}" | awk -F ":" '{print $5}')"
-#echo "\"${mac5}\""
 mac6="0x$(echo "${macaddr}" | awk -F ":" '{print $6}')"
-#echo "\"${mac6}\""
-
-#echo "${template}"
-template=$(echo "${template}" | sed "s/0xx1/${mac1}/g")
-#echo "${template}"
-template=$(echo "${template}" | sed "s/0xx2/${mac2}/g")
-#echo "${template}"
-template=$(echo "${template}" | sed "s/0xx3/${mac3}/g")
-#echo "${template}"
-template=$(echo "${template}" | sed "s/0xx4/${mac4}/g")
-#echo "${template}"
-template=$(echo "${template}" | sed "s/0xx5/${mac5}/g")
-#echo "${template}"
-template=$(echo "${template}" | sed "s/0xx6/${mac6}/g")
-#echo "${template}"
 
 IP4=$(echo "${ipaddr}" | awk -F "." '{print $NF}')
-template=$(echo "${template}" | sed "s/IP4/${IP4}/g")
+
+# 我知道 function 是啥，就趕鴨子上架
+if [[ "${PodName}" =~ ^free5gc-upf-deployment-1-* ]]; then
+  # echo "UPF-1"
+  UPF2Replace="UPF1"
+  # replace name and ifnum
+  template=$(echo ${template} | sed "s/UPF2Replace/${UPF2Replace}/g")
+  template=$(echo ${template} | sed "s/ifnum2replace/${ifnum2replace}/g")
+  # replace MAC Addr
+  template=$(echo "${template}" | sed "s/0xx1/${mac1}/g")
+  template=$(echo "${template}" | sed "s/0xx2/${mac2}/g")
+  template=$(echo "${template}" | sed "s/0xx3/${mac3}/g")
+  template=$(echo "${template}" | sed "s/0xx4/${mac4}/g")
+  template=$(echo "${template}" | sed "s/0xx5/${mac5}/g")
+  template=$(echo "${template}" | sed "s/0xx6/${mac6}/g")
+  # replace IP Addr
+  template=$(echo "${template}" | sed "s/IP4/${IP4}/g")
+elif [[ "${PodName}" =~ ^free5gc-upf-deployment-2-* ]]; then
+  # echo "UPF-2"
+  UPF2Replace="UPF2"
+  # replace name and ifnum
+  template=$(echo ${template} | sed "s/UPF2Replace/${UPF2Replace}/g")
+  template=$(echo ${template} | sed "s/ifnum2replace/${ifnum2replace}/g")
+  # replace MAC Addr
+  template=$(echo "${template}" | sed "s/0xx1/${mac1}/g")
+  template=$(echo "${template}" | sed "s/0xx2/${mac2}/g")
+  template=$(echo "${template}" | sed "s/0xx3/${mac3}/g")
+  template=$(echo "${template}" | sed "s/0xx4/${mac4}/g")
+  template=$(echo "${template}" | sed "s/0xx5/${mac5}/g")
+  template=$(echo "${template}" | sed "s/0xx6/${mac6}/g")
+  # replace IP Addr
+  template=$(echo "${template}" | sed "s/IP4/${IP4}/g")
+elif [[ "${PodName}" =~ ^free5gc-upf-deployment-3-* ]]; then
+  # echo "UPF-3"
+  UPF2Replace="UPF3"
+  # replace name and ifnum
+  # template 被換了，所以後面就甭再用 ${template_no_comma} 了
+  template=$(echo ${template_no_comma} | sed "s/UPF2Replace/${UPF2Replace}/g")
+  template=$(echo ${template} | sed "s/ifnum2replace/${ifnum2replace}/g")
+  # replace MAC Addr
+  template=$(echo "${template}" | sed "s/0xx1/${mac1}/g")
+  template=$(echo "${template}" | sed "s/0xx2/${mac2}/g")
+  template=$(echo "${template}" | sed "s/0xx3/${mac3}/g")
+  template=$(echo "${template}" | sed "s/0xx4/${mac4}/g")
+  template=$(echo "${template}" | sed "s/0xx5/${mac5}/g")
+  template=$(echo "${template}" | sed "s/0xx6/${mac6}/g")
+  # replace IP Addr
+  template=$(echo "${template}" | sed "s/IP4/${IP4}/g")
+elif [[ "${PodName}" =~ ^free5gc-upf-deployment-* ]]; then
+  # echo "UPF-LB"
+  UPF2Replace="LB"
+  # replace name and ifnum
+  # template 被換了，所以後面就甭再用 ${template_no_braces} 了
+  template=$(echo ${template_no_braces} | sed "s/UPF2Replace/${UPF2Replace}/g")
+  template=$(echo ${template} | sed "s/ifnum2replace/${ifnum2replace}/g")
+  # replace MAC Addr
+  template=$(echo "${template}" | sed "s/0xx1/${mac1}/g")
+  template=$(echo "${template}" | sed "s/0xx2/${mac2}/g")
+  template=$(echo "${template}" | sed "s/0xx3/${mac3}/g")
+  template=$(echo "${template}" | sed "s/0xx4/${mac4}/g")
+  template=$(echo "${template}" | sed "s/0xx5/${mac5}/g")
+  template=$(echo "${template}" | sed "s/0xx6/${mac6}/g")
+  # replace IP Addr
+  template=$(echo "${template}" | sed "s/IP4/${IP4}/g")
+elif [[ "${PodName}" =~ ^ueransim-gnb-deployment-* ]]; then
+  # echo "gNB"
+  UPF2Replace="gNB"
+  # replace name and ifnum
+  # template 被換了，所以後面就甭再用 ${template_no_braces} 了
+  template=$(echo ${template_no_braces} | sed "s/UPF2Replace/${UPF2Replace}/g")
+  template=$(echo ${template} | sed "s/ifnum2replace/${ifnum2replace}/g")
+  # replace MAC Addr
+  template=$(echo "${template}" | sed "s/0xx1/${mac1}/g")
+  template=$(echo "${template}" | sed "s/0xx2/${mac2}/g")
+  template=$(echo "${template}" | sed "s/0xx3/${mac3}/g")
+  template=$(echo "${template}" | sed "s/0xx4/${mac4}/g")
+  template=$(echo "${template}" | sed "s/0xx5/${mac5}/g")
+  template=$(echo "${template}" | sed "s/0xx6/${mac6}/g")
+  # replace IP Addr
+  template=$(echo "${template}" | sed "s/IP4/${IP4}/g")
+elif [[ "${PodName}" =~ ^ueransim-ue-deployment-* ]]; then
+  # echo "UE"
+  UPF2Replace="UE"
+  # replace name and ifnum
+  # template 被換了，所以後面就甭再用 ${template_no_braces} 了
+  template=$(echo ${template_no_braces} | sed "s/UPF2Replace/${UPF2Replace}/g")
+  template=$(echo ${template} | sed "s/ifnum2replace/${ifnum2replace}/g")
+  # replace MAC Addr
+  template=$(echo "${template}" | sed "s/0xx1/${mac1}/g")
+  template=$(echo "${template}" | sed "s/0xx2/${mac2}/g")
+  template=$(echo "${template}" | sed "s/0xx3/${mac3}/g")
+  template=$(echo "${template}" | sed "s/0xx4/${mac4}/g")
+  template=$(echo "${template}" | sed "s/0xx5/${mac5}/g")
+  template=$(echo "${template}" | sed "s/0xx6/${mac6}/g")
+  # replace IP Addr
+  template=$(echo "${template}" | sed "s/IP4/${IP4}/g")
+else
+  echo "No regex matched :("
+  UPF2Replace="SomeName"
+  # replace name and ifnum
+  template=$(echo ${template} | sed "s/UPF2Replace/${UPF2Replace}/g")
+  template=$(echo ${template} | sed "s/ifnum2replace/${ifnum2replace}/g")
+  # replace MAC Addr
+  template=$(echo "${template}" | sed "s/0xx1/${mac1}/g")
+  template=$(echo "${template}" | sed "s/0xx2/${mac2}/g")
+  template=$(echo "${template}" | sed "s/0xx3/${mac3}/g")
+  template=$(echo "${template}" | sed "s/0xx4/${mac4}/g")
+  template=$(echo "${template}" | sed "s/0xx5/${mac5}/g")
+  template=$(echo "${template}" | sed "s/0xx6/${mac6}/g")
+  # replace IP Addr
+  template=$(echo "${template}" | sed "s/IP4/${IP4}/g")
+fi
+
 echo "${template}"
 }
 
