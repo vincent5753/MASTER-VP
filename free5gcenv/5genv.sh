@@ -199,7 +199,7 @@ printall
 #echo "${yel}[Debug]${end} 抓 PFCP request 參考指令: sudo tcpdump -v src host 10.244.0.8 and udp port 8805 -i ${VethName}"
 #sleep 30
 
-echo "${yel}[FTI]${end} 在背景抓 PFCP，執行: sudo nohub tcpdump -U -i ${VethName} ip -v -w $(pwd)/pfcp.pcap"
+echo "${yel}[FYI]${end} 在背景抓 PFCP，執行: sudo nohub tcpdump -U -i ${VethName} ip -v -w $(pwd)/pfcp.pcap"
 sudo nohup tcpdump -U -i ${VethName} ip -v -w ${curpath}/pfcp.pcap &
 sleep 2
 #sudo tcpdump -U -i ${VethName} ip -v -w $(pwd)/pfcp.pcap &
