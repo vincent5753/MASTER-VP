@@ -1,5 +1,5 @@
 # eBPF
-獲取 `veth` 請參考 [getpodveth.sh](https://github.com/vincent5753/MASTER-VP/blob/main/eBPF/getpodveth.sh)
+To find the relationship between a `Pod` and a `veth`, look up [getpodveth.sh](https://github.com/vincent5753/MASTER-VP/blob/main/eBPF/getpodveth.sh).
 
 ## ENV setup
 ```
