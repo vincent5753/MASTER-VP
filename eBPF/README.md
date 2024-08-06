@@ -3,38 +3,45 @@
 
 ## ENV setup
 ```
-sudo apt install -y clang llvm libbpf-dev libelf-dev libpcap-dev gcc-multilib build-essential
+sudo apt install -y clang llvm
+sudo apt install -y libbpf-dev libelf-dev libpcap-dev gcc-multilib build-essential
 sudo apt install -y linux-headers-$(uname -r) linux-tools-common linux-tools-generic linux-tools-$(uname -r)
+sudo apt install -y clang libmnl-dev bison flex pkg-config dwarves
 ```
 
-## XDP_DROP-ALL
-編譯
+## Compile
 ```
-clang -target bpf -c XDP_DROP-ALL.c -o drop.o -O2
-```
-
-掛載至網卡
-```
-sudo ip link set dev vethe102c1e6 xdpdrv obj XDP_DROP-ALL.o sec .text
+clang -target bpf -O2 -g -c ${code}.c -o ${obj}.o
 ```
 
-卸載
+## XDP
 ```
-sudo ip link set dev vethe102c1e6 xdp off
+# Attach
+sudo ip link set dev ${if} xdpdrv obj ${code}.o sec ${sec}
+
+# Detach
+sudo ip link set dev ${if} xdpdrv off
 ```
 
-## XDP_DROP-ICMP
-編譯
+## tc
 ```
-clang -target bpf -c XDP_DROP-ICMP.c -o XDP_DROP-ICMP.o -O2
-```
+# Check if interface has clsact
+sudo tc qdisc show dev ${if} clsact
 
-掛載至網卡
-```
-sudo ip link set dev vethe102c1e6 xdpdrv obj XDP_DROP-ICMP.o sec drop_icmp
-```
+# Adding clsact
+sudo tc qdisc add dev ${if} clsact
 
-卸載
-```
-sudo ip link set dev vethe102c1e6 xdp off
+# Attach
+## to ingress
+sudo tc filter add dev ${if} ingress bpf da obj ${objname}.o sec ${secname}
+
+## to egress
+sudo tc filter add dev ${if} egress bpf da obj ${objname}.o sec ${secname}
+
+# Detach
+## from ingress
+sudo tc filter del dev ${if} ingress pref 49152 handle 0x1 bpf
+
+## from egress
+sudo tc filter del dev ${if} egress pref 49152 handle 0x1 bpf
 ```
