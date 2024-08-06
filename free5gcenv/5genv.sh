@@ -144,7 +144,19 @@ update_myhelper_header_info(){
   sed -i "s/UEInterface2replace/${UEInterface2replace}/g" myhelper.h
 }
 
+detect_docker_group(){
+  docker version >/dev/null 2>&1
+  if [ "$?" != "0"  ]
+  then
+    echo "${red}[ERR]${end} The groupadd does not take effect to current terminal session, exit and enter again."
+    exit 1
+  else
+    echo "${grn}[Info]${end} You are able to use docker without sudos, good."
+  fi
+}
+
 clear
+detect_docker_group
 echo "${yel}[Preflightcheck]${end} 請確認運行的 Kubernetes 叢集是全新未部屬"
 
 curpath=$(pwd)
