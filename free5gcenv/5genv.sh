@@ -27,6 +27,15 @@ get_containerifnum(){
 get_vethname(){
 #  echo "[Func] get_vethname"
   VethName=$(ip a | grep "${IfNum}: " | cut -d '@' -f 1 | cut -d ' ' -f 2)
+  if [[ ${VethName} =~ ^veth* ]]
+  then
+    :
+  else
+    echo "${red}[ERROR]${end} Opps, looks like something messed up, here's debug info."
+    echo "${red}[Debug]${end} ContainerID: ${ContainerID} ContainerPID: ${ContainerPID}"
+    echo "${red}[Debug]${end} IfNum: ${IfNum} VethName: ${VethName}"
+    exit 1
+  fi
   #echo "VethName: $VethName"
 }
 
