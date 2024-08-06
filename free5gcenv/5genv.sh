@@ -193,6 +193,7 @@ printall
 
 echo "${yel}[FTI]${end} 在背景抓 PFCP，執行: sudo nohub tcpdump -U -i ${VethName} ip -v -w $(pwd)/pfcp.pcap"
 sudo nohup tcpdump -U -i ${VethName} ip -v -w ${curpath}/pfcp.pcap &
+sleep 2
 #sudo tcpdump -U -i ${VethName} ip -v -w $(pwd)/pfcp.pcap &
 
 # 取得 veth，在 smf 起來前要監聽 PFCP Association、Modification
