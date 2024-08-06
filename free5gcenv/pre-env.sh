@@ -8,6 +8,7 @@ if [ "$?" -ne "0" ]; then
   curl https://raw.githubusercontent.com/vincent5753/KAIS/main/legacy/Ubuntu2004-K8s_1_23-dockershim-flannel.sh | bash
 else
   echo "OK，你有 kubenetes 環境"
+  bash nemesis.sh
   bash Ubuntu2004-K8s_1_23-containerd-flannel.sh
 fi
 
