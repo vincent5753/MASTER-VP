@@ -179,7 +179,7 @@ printall
 #echo "${yel}[Debug]${end} 抓 PFCP request 參考指令: sudo tcpdump -v src host 10.244.0.8 and udp port 8805 -i ${VethName}"
 #sleep 30
 
-echo "${red}[Debug]${end} sudo nohub tcpdump -U -i ${VethName} ip -v -w $(pwd)/pfcp.pcap"
+echo "${yel}[FTI]${end} 在背景抓 PFCP，執行: sudo nohub tcpdump -U -i ${VethName} ip -v -w $(pwd)/pfcp.pcap"
 sudo nohup tcpdump -U -i ${VethName} ip -v -w ${curpath}/pfcp.pcap &
 #sudo tcpdump -U -i ${VethName} ip -v -w $(pwd)/pfcp.pcap &
 
@@ -246,9 +246,9 @@ getpodinfobyprefix "free5gc-webui"
 webuiip="${podip}"
 echo "webuiip: ${webuiip}"
 
-echo "${yel}[Debug]${end} 我們先睡 60 秒，快去 WEB-UI 註冊"
+echo "${yel}[FTI]${end} 如果你需要使用 WEB-UI:"
 hostip=$(hostname -I | awk -F " " '{print $1}')
-echo "${yel}[Debug]${end} 參考網址: ${hostip}:31111/#/subscriber"
+echo "${yel}[FYI]${end} 參考網址: ${hostip}:31111/#/subscriber"
 sleep 30
 curl "http://${hostip}:31111/api/subscriber" \
   -H 'Accept: application/json' \
@@ -297,8 +297,9 @@ echo "${grn}[Deploy][UERANSIM]${end} Deploying ue"
 sleep 30
 kubectl apply -f ueransim/ueransim-ue.yaml
 waituntilpodready "ueransim-ue"
+sleep 10
+echo "${yel}[FYI]${end}kubectl exec -it ${podname} -- ip a"
 echo "${yel}[UE]${end} UE 內網路介面如下"
-echo "kubectl exec -it ${podname} -- bash"
 kubectl exec -it ${podname} -- ip a
 
 sudo kill -15 $(pidof tcpdump)
