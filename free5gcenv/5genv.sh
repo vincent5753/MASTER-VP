@@ -256,7 +256,7 @@ echo "${grn}[Deploy][Wait]${end} 等待 webui 服務轉為 Running 狀態..."
 waituntilpodready "free5gc-webui"
 getpodinfobyprefix "free5gc-webui"
 webuiip="${podip}"
-echo "webuiip: ${webuiip}"
+#echo "webuiip: ${webuiip}"
 
 echo "${yel}[FTI]${end} 如果你需要使用 WEB-UI:"
 hostip=$(hostname -I | awk -F " " '{print $1}')
