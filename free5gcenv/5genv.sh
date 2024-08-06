@@ -209,7 +209,7 @@ echo "${grn}[Deploy][Wait]${end} 等待 AMF 服務轉為 Running 狀態..."
 waituntilpodready "free5gc-amf"
 getpodinfobyprefix "free5gc-amf"
 amfip="${podip}"
-echo "amfip: ${amfip}"
+#echo "amfip: ${amfip}"
 
 echo "${grn}[Deploy][5GC]${end} Deploying SMF"
 #kubectl apply -f 05-free5gc-smf.yaml
@@ -310,8 +310,8 @@ sleep 30
 kubectl apply -f ueransim/ueransim-ue.yaml
 waituntilpodready "ueransim-ue"
 sleep 10
-echo "${yel}[FYI]${end}kubectl exec -it ${podname} -- ip a"
-echo "${yel}[UE]${end} UE 內網路介面如下"
+echo "${yel}[FYI]${end} kubectl exec -it ${podname} -- ip a"
+echo "${yel}[FYI]${end} UE 內網路介面如下"
 kubectl exec -it ${podname} -- ip a
 
 sudo kill -15 $(pidof tcpdump)
