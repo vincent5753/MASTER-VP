@@ -2,7 +2,14 @@
 sudo apt install -y jq
 
 # k8s 1.23
-curl https://raw.githubusercontent.com/vincent5753/KAIS/main/legacy/Ubuntu2004-K8s_1_23-dockershim-flannel.sh | bash
+which kubeadm
+if [ "$?" -ne "0" ]; then
+  echo "你沒有 kubenetes 環境"
+  curl https://raw.githubusercontent.com/vincent5753/KAIS/main/legacy/Ubuntu2004-K8s_1_23-dockershim-flannel.sh | bash
+else
+  echo "OK，你有 kubenetes 環境"
+  bash Ubuntu2004-K8s_1_23-containerd-flannel.sh
+fi
 
 # k8s 1.24
 #curl https://raw.githubusercontent.com/vincent5753/KAIS/main/legacy/Ubuntu2004-K8s_1_24-containerd-flannel.sh | bash
