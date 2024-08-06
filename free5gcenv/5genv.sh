@@ -301,6 +301,7 @@ gnbip=$(printf "%d.%d.%d.%d\n" "${i1}" "${i2}" "${i3}" "$((i4 + 1))")
 #echo "gnbip: ${gnbip}"
 sed -i "s/10.244.0.7/${amfip}/g" ueransim/ueransim-gnb.yaml
 sed -i "s/10.244.0.15/${gnbip}/g" ueransim/ueransim-gnb.yaml
+echo ""
 echo "${grn}[Deploy][UERANSIM]${end} Deploying gnb"
 kubectl apply -f ueransim/ueransim-gnb.yaml
 
