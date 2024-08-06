@@ -1,5 +1,5 @@
 # MASTER-VP
-## 介紹 / Itro
+## 介紹 / Intro
 `getpodveth.sh` 輸入 `pod 名稱` 並輸出宿主機上對應的 `veth` 網卡
 
 ## 使用 / Usage
