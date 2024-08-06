@@ -183,7 +183,7 @@ then
     ping)
       # kubectl exec -it ${ue_name} -- apt update
       # kubectl exec -it ${ue_name} -- apt install -y iputils-ping
-      kubectl exec -it ${ue_name} -- ping -I uesimtun0 -c 1 8.8.8.8
+      kubectl exec -it ${ue_name} -- ping -I uesimtun0 -c 13 8.8.8.8
     ;;
     curl)
       # kubectl exec -it ${ue_name} -- apt update
