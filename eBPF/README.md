@@ -45,3 +45,8 @@ sudo tc filter del dev ${if} ingress pref 49152 handle 0x1 bpf
 ## from egress
 sudo tc filter del dev ${if} egress pref 49152 handle 0x1 bpf
 ```
+
+## trace_pipe
+```
+sudo cat /sys/kernel/debug/tracing/trace_pipe
+```
