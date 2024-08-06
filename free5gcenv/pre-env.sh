@@ -18,6 +18,7 @@ if grep -q "libbpf" <<< $(ip -V)
 then
   echo "OK，你有 libbpf"
 else
+  rm iproute2-5.18.0.tar.xz*
   wget https://mirrors.edge.kernel.org/pub/linux/utils/net/iproute2/iproute2-5.18.0.tar.xz
   tar xvJf iproute2-5.18.0.tar.xz
   cd iproute2-5.18.0
