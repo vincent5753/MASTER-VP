@@ -1,18 +1,19 @@
 #!/bin/bash
 
 curpath=$(pwd)
-
+sudo apt update
+sudo apt install -y jq clang llvm libbpf-dev libelf-dev libpcap-dev gcc-multilib build-essential linux-headers-$(uname -r) linux-tools-common linux-tools-generic linux-tools-$(uname -r) libmnl-dev bison flex pkg-config dwarves python3-pip tcpreplay
 # getpodveth dependency
-sudo apt install -y jq
+#sudo apt install -y jq
 
 # eBPF-related
-sudo apt install -y clang llvm
-sudo apt install -y libbpf-dev libelf-dev libpcap-dev gcc-multilib build-essential
-sudo apt install -y linux-headers-$(uname -r) linux-tools-common linux-tools-generic linux-tools-$(uname -r)
-sudo apt install -y clang libmnl-dev bison flex pkg-config dwarves
+#sudo apt install -y clang llvm
+#sudo apt install -y libbpf-dev libelf-dev libpcap-dev gcc-multilib build-essential
+#sudo apt install -y linux-headers-$(uname -r) linux-tools-common linux-tools-generic linux-tools-$(uname -r)
+#sudo apt install -y libmnl-dev bison flex pkg-config dwarves
 
 # Packet-related
-sudo apt install -y python3-pip tcpreplay
+#sudo apt install -y python3-pip tcpreplay
 pip3 install scapy
 
 # upgrade and compile iproute2 to support BTF
