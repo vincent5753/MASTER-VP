@@ -1,5 +1,7 @@
 #!/bin/bash
 
+curpath=$(pwd)
+
 # getpodveth dependency
 sudo apt install -y jq
 
@@ -46,6 +48,7 @@ if [ "$?" -ne "0" ]; then
   echo "你沒有 kubenetes 環境"
   curl https://raw.githubusercontent.com/vincent5753/KAIS/main/legacy/Ubuntu2004-K8s_1_23-dockershim-flannel.sh | bash
 else
+  cd "${curpath}"
   echo "OK，你有 kubenetes 環境"
   bash nemesis.sh
   bash Ubuntu2004-K8s_1_23-containerd-flannel.sh
