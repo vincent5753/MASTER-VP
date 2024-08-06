@@ -31,12 +31,14 @@ sudo tc qdisc show dev ${if} clsact
 # Adding clsact
 sudo tc qdisc add dev ${if} clsact
 
+
 # Attach
 ## to ingress
 sudo tc filter add dev ${if} ingress bpf da obj ${objname}.o sec ${secname}
 
 ## to egress
 sudo tc filter add dev ${if} egress bpf da obj ${objname}.o sec ${secname}
+
 
 # Detach
 ## from ingress
