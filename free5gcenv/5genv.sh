@@ -174,7 +174,7 @@ detect_docker_group(){
 
 clear
 detect_docker_group
-
+echo "${grn}[Deploy]${end} Pulling images."
 docker pull free5gmano/free5gc-control-plane:stage3.2.1-amd64
 docker pull free5gmano/free5gc-user-plane:stage3.2.1-amd64
 docker pull free5gmano/free5gc-webui:stage3.2.1-amd64
