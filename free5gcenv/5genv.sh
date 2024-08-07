@@ -130,14 +130,14 @@ update_helper_info(){
   sed -i "s/UPF3Name2replace/${UPF3Name2replace}/g" helper.sh
   sed -i "s/UEName2replace/${UEName2replace}/g" helper.sh
   sed -i "s/LBVeth2replace/${LBVeth2replace}/g" helper.sh
-  # echo "${red}[Debug]${end} ContainerID: ${ContainerID} ContainerPID: ${ContainerPID}"
-  # echo "${red}[Debug]${end} IfNum: ${IfNum} VethName: ${VethName}"
-  # echo "${red}[Debug]${end} UPFLBName2replace: ${UPFLBName2replace}"
-  # echo "${red}[Debug]${end} UPF1Name2replace: ${UPF1Name2replace}"
-  # echo "${red}[Debug]${end} UPF2Name2replace: ${UPF2Name2replace}"
-  # echo "${red}[Debug]${end} UPF3Name2replace: ${UPF3Name2replace}"
-  # echo "${red}[Debug]${end} UEName2replace: ${UEName2replace}"
-  # echo "${red}[Debug]${end} LBVeth2replace: ${LBVeth2replace}"
+   echo "${red}[Debug]${end} ContainerID: ${ContainerID} ContainerPID: ${ContainerPID}"
+   echo "${red}[Debug]${end} IfNum: ${IfNum} VethName: ${VethName}"
+   echo "${red}[Debug]${end} UPFLBName2replace: ${UPFLBName2replace}"
+   echo "${red}[Debug]${end} UPF1Name2replace: ${UPF1Name2replace}"
+   echo "${red}[Debug]${end} UPF2Name2replace: ${UPF2Name2replace}"
+   echo "${red}[Debug]${end} UPF3Name2replace: ${UPF3Name2replace}"
+   echo "${red}[Debug]${end} UEName2replace: ${UEName2replace}"
+   echo "${red}[Debug]${end} LBVeth2replace: ${LBVeth2replace}"
 }
 
 update_myhelper_header_info(){
