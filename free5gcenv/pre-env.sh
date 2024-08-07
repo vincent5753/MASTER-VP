@@ -1,8 +1,8 @@
 #!/bin/bash
 
 curpath=$(pwd)
-sudo apt update
-sudo apt install -y jq clang llvm libbpf-dev libelf-dev libpcap-dev gcc-multilib build-essential linux-headers-$(uname -r) linux-tools-common linux-tools-generic linux-tools-$(uname -r) libmnl-dev bison flex pkg-config dwarves python3-pip tcpreplay
+sudo apt-get update
+sudo apt-get install -y jq clang llvm libbpf-dev libelf-dev libpcap-dev gcc-multilib build-essential linux-headers-$(uname -r) linux-tools-common linux-tools-generic linux-tools-$(uname -r) libmnl-dev bison flex pkg-config dwarves python3-pip tcpreplay
 # getpodveth dependency
 #sudo apt install -y jq
 
