@@ -174,6 +174,14 @@ detect_docker_group(){
 
 clear
 detect_docker_group
+
+docker pull free5gmano/free5gc-control-plane:stage3.2.1-amd64
+docker pull free5gmano/free5gc-user-plane:stage3.2.1-amd64
+docker pull free5gmano/free5gc-webui:stage3.2.1-amd64
+docker pull free5gmano/nextepc-mongodb:latest
+docker pull free5gmano/ueransim:v3.2.5
+docker pull vincent5753/ueransim:v3.2.5
+
 echo "${yel}[Preflightcheck]${end} 請確認運行的 Kubernetes 叢集是全新未部屬"
 
 curpath=$(pwd)
