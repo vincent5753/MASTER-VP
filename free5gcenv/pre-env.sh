@@ -16,6 +16,9 @@ sudo apt-get install -y jq clang llvm libbpf-dev libelf-dev libpcap-dev gcc-mult
 #sudo apt install -y python3-pip tcpreplay
 pip3 install scapy
 
+# Just in case that if we forgot something
+echo 0 | sudo tee /proc/sys/net/ipv4/conf/all/rp_filter
+
 # upgrade and compile iproute2 to support BTF
 if grep -q "libbpf" <<< $(ip -V)
 then
