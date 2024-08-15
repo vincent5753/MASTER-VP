@@ -32,19 +32,22 @@ sudo tc qdisc show dev ${if} clsact
 sudo tc qdisc add dev ${if} clsact
 
 
-# Attach
-## to ingress
-sudo tc filter add dev ${if} ingress bpf da obj ${objname}.o sec ${secname}
+# Lookup attached ebpf progs on tc
+ ## ingress
+sudo tc filter show dev ${if} ingress
+ ## egress
+sudo tc filter show dev ${if} egress
 
-## to egress
+# Attach
+ ## to ingress
+sudo tc filter add dev ${if} ingress bpf da obj ${objname}.o sec ${secname}
+ ## to egress
 sudo tc filter add dev ${if} egress bpf da obj ${objname}.o sec ${secname}
 
-
 # Detach
-## from ingress
+ ## from ingress
 sudo tc filter del dev ${if} ingress pref 49152 handle 0x1 bpf
-
-## from egress
+ ## from egress
 sudo tc filter del dev ${if} egress pref 49152 handle 0x1 bpf
 ```
 
