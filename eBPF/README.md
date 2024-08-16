@@ -26,6 +26,7 @@ sudo ip link set dev ${if} xdpdrv off
 ## tc
 ```
 # Check if interface has clsact
+ ## Tips: You will need to do this, every time you reboot the host.
 sudo tc qdisc show dev ${if} clsact
 
 # Adding clsact
