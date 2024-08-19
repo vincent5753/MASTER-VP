@@ -58,7 +58,12 @@ else
   bash Ubuntu2004-K8s_1_23-containerd-flannel-Ext.sh
 fi
 
-echo "目前 hostname"
-hostname
-echo "如果需要設定 hostname，執行:"
-echo "sudo hostnamectl set-hostname ext-upf3"
+hostname=$(hostname)
+
+if [[ ${hostname} =~ ext-upf[1-3]$ ]]; then
+  echo "目前 hostname: ${hostname}"
+else
+  echo "目前 hostname: ${hostname}"
+  echo "你需要設定 hostname，執行:"
+  echo "sudo hostnamectl set-hostname ext-upf[1-3]"
+fi
