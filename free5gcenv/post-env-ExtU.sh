@@ -34,7 +34,7 @@ macaddr_hex=$(echo "${macaddr}" | awk -F: '{for(i=1; i<=NF; i++) printf "0x%s%s"
 MAC2REPLACE="${macaddr_hex}"
 #echo "${macaddr_hex}"
 
-template_no_braces=".name = \"UPF2Replace\", .ifnum = 2, .mac = {MAC2REPLACE}, .ipv4 = 10 | (244 << 8) | (0 << 16) | (IP4 << 24)"
+template_no_braces=".name = \"UPF2Replace\", .ifnum = 2, .mac = {MAC2REPLACE}, .ipv4 = 10 | (0 << 8) | (0 << 16) | (IP4 << 24)"
 
 #echo "${template_no_braces}"
 
