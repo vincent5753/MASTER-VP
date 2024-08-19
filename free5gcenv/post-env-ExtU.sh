@@ -51,7 +51,10 @@ containerpid=$(docker inspect --format '{{.State.Pid}}' "${containerid}")
 #echo "containerid: ${containerid} containerpid: ${containerpid}"
 containerip=$(sudo nsenter -t "${containerpid}" -n ip a show eth0 | grep inet | awk '{print $2}' | awk -F "/" '{print $1}')
 containermac=$(sudo nsenter -t "${containerpid}" -n ip a show eth0 | grep ether | awk '{print $2}')
-
+vethif=$(sudo nsenter -t "${containerpid}" -n ip a show eth0 | grep "eth0@" | cut -d '@' -f 2 | cut -d ':' -f 1 | sed 's/if//g')
+vethname=$(ip a | grep -E "^${vethif}: " | cut -d '@' -f 1 | cut -d ' ' -f 2)
 #echo "containerip: ${containerip} containermac: ${containermac}"
-echo "<tcpreplay>"
+echo "<PFCP Rewrite>"
 echo "python3 pfcp_v2.py -i pfcp.pcap -o pfcp-exupf.pcap --newupfip ${containerip} --newupfmac ${containermac} --upflbip 10.244.0.5"
+echo "<tcpreplay>"
+echo "sudo tcpreplay -i ${vethname} -t -K pfcp-exupf.pcap"
