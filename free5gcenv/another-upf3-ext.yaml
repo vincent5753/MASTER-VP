@@ -45,7 +45,7 @@ metadata:
 spec:
   selector:
     app: free5gc-upf-3
-  clusterIP: None # 10.96.100.10
+  clusterIP: None # 10.96.100.12
   ports:
     - name: pfcp
       protocol: UDP
