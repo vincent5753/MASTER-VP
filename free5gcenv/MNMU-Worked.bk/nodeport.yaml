@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: free5gc-upf-nodeport
+  namespace: default
+spec:
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - name: pfcp
+    nodePort: 8805
+    port: 8805
+    protocol: UDP
+    targetPort: 8805
+  - name: sbi
+    nodePort: 29518
+    port: 29518
+    protocol: TCP
+    targetPort: 29518
+  - name: gtp
+    nodePort: 2152
+    port: 2152
+    protocol: UDP
+    targetPort: 2152
+  selector:
+    app: free5gc-upf
+  sessionAffinity: None
+  type: NodePort
+status:
+  loadBalancer: {}

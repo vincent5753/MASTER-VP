@@ -1,0 +1,259 @@
+#include <linux/if_ether.h>
+#include <linux/ip.h>
+#include <linux/in.h>
+#include <linux/tcp.h>
+#include <linux/udp.h>
+#include <bpf/bpf_endian.h>
+#include <bpf/bpf_helpers.h>
+
+// === const ===
+#define NO_INFO 0
+#define SOME_INFO 1
+#define MORE_INFO 2
+#define ALL_INFO 3
+
+#ifndef DEBUG_LEVEL
+    // 0 -> No info
+    // 1 -> some info
+    // 2 -> LB info
+    // 3 -> all info
+    #define DEBUG_LEVEL NO_INFO
+#endif
+
+#define UPF_COUNT 1
+#define EXUPF_COUNT 1
+// L2
+#define ETH_SRC_OFF offsetof(struct ethhdr, h_source)
+#define ETH_DST_OFF offsetof(struct ethhdr, h_dest)
+// L3
+#define IP_HLEN sizeof(struct iphdr)
+#define IP_SRC_OFF ETH_HLEN + offsetof(struct iphdr, saddr)
+#define IP_DST_OFF ETH_HLEN + offsetof(struct iphdr, daddr)
+#define IP_CSUM_OFFSET ETH_HLEN + offsetof(struct iphdr, check)
+// L4
+#define TCP_HLEN sizeof(struct tcphdr)
+#define UDP_HLEN sizeof(struct udphdr)
+#define TCP_CSUM_OFF ETH_HLEN + IP_HLEN + offsetof(struct tcphdr, check)
+#define UDP_CSUM_OFF ETH_HLEN + IP_HLEN + offsetof(struct udphdr, check)
+
+#define TCP_DPORT_OFF ETH_HLEN + IP_HLEN + offsetof(struct tcphdr, dest)
+#define UDP_DPORT_OFF ETH_HLEN + IP_HLEN + offsetof(struct udphdr, dest)
+
+
+// === veth ===
+struct gtphdr {  // 12 byte
+    __u8    pn:1, s:1, e:1, reserve:1, pt:1, version:3;
+    __u8    message_type;
+    __be16  length;
+    __be32  teid;
+    __be16  seq;
+    __u8    n_pdu;
+    __u8    next_ext_hdr_type;
+};
+
+// GTP-U Extension Header - PDU Session Container
+// TODO: 先假設 4 byte
+struct gtp_exhdr_pdu_session_container {
+    __be32  length:8,
+            pdu_session_container:16,
+            next_ext_hdr_type:8;
+};
+
+struct interface {
+    char name[10];
+    const unsigned int ifnum;
+    unsigned char mac[ETH_ALEN];
+    __be32 ipv4;
+};
+
+// 7e:89:9e:ae:03:16
+// 10.0.0.161
+struct interface ens18_cn = {
+    .name = "ens18-cn",
+    .ifnum = 2,
+    .mac = {0x7e, 0x89, 0x9e, 0xae, 0x03, 0x16},
+    .ipv4 = 10 | (0 << 8) | (0 << 16) | (161 << 24)
+};
+
+// 46:1b:14:74:67:9f
+// 10.0.0.196
+struct interface ens18_extupf1 = {
+    .name = "ens18-eu1",
+    .ifnum = 2,
+    .mac = {0x46, 0x1b, 0x14, 0x74, 0x67, 0x9f},
+    .ipv4 = 10 | (0 << 8) | (0 << 16) | (196 << 24)
+};
+
+struct interface ens18_extupf2 = {
+.name = "ens18-eu2", .ifnum = 2, .mac = {0x7e, 0xa8, 0x43, 0x93, 0xec, 0xfc}, .ipv4 = 10 | (0 << 8) | (0 << 16) | (159 << 24)
+};
+
+struct interface ens18_extupf3 = {
+.name = "ens18-eu3", .ifnum = 2, .mac = {0x4e, 0x04, 0x9d, 0x67, 0x06, 0x7e}, .ipv4 = 10 | (0 << 8) | (0 << 16) | (158 << 24)
+};
+
+// Underlay(L2, flannel.1 MAC) Overlay(L3, Pod IP)
+struct interface cni0_veth = {
+    .name = "CNI0",
+    .ifnum = 5,
+    .mac = {0xba, 0x25, 0xef, 0x5d, 0x74, 0x61},
+    .ipv4 = 10 | (244 << 8) | (1 << 16) | (5 << 24)
+};
+
+struct interface ue_veth = {
+.name = "UE", .ifnum = 22, .mac = {0x8e, 0x30, 0xbf, 0xba, 0xc8, 0x1a}, .ipv4 = 10 | (244 << 8) | (0 << 16) | (16 << 24)
+};
+
+struct interface gnb_veth = {  // response 的時候會用到，記得要改
+.name = "gNB", .ifnum = 21, .mac = {0x52, 0xe4, 0xa6, 0x5f, 0x03, 0x4a}, .ipv4 = 10 | (244 << 8) | (0 << 16) | (15 << 24)
+};
+
+struct interface lb_veth = {
+.name = "LB", .ifnum = 11, .mac = {0xd6, 0x11, 0x16, 0xf5, 0x0d, 0xf4}, .ipv4 = 10 | (244 << 8) | (0 << 16) | (5 << 24)
+};
+
+struct interface fln_cn = {
+.name = "FLN_CN", .ifnum = 4, .mac = {0xb6, 0x17, 0xe3, 0xd3, 0x0b, 0xe3}, .ipv4 = 10 | (244 << 8) | (0 << 16) | (5 << 24)
+};
+
+struct interface fln_ext1 = {
+.name = "FLN_EXT1", .ifnum = 4, .mac = {0xc2, 0x5f, 0xf6, 0x65, 0x7c, 0x14}, .ipv4 = 10 | (244 << 8) | (1 << 16) | (2 << 24)
+};
+
+struct interface upf_veth[UPF_COUNT] = {
+    {
+        .name = "UPF1",
+        .ifnum = 9,
+        .mac = {0x8a, 0xf3, 0xc4, 0x90, 0x6f, 0xf1},
+        .ipv4 = 10 | (244 << 8) | (0 << 16) | (17 << 24)
+    }
+};
+
+struct interface exupf_veth[EXUPF_COUNT] = {  // to flannel.1
+    {
+        .name = "EX-UPF1",
+        .ifnum = 4,  // flannel.1 on CN
+        .mac = {0xc2, 0x5f, 0xf6, 0x65, 0x7c, 0x14},  // flannel.1 on Ext-UPF
+        .ipv4 = 10 | (244 << 8) | (1 << 16) | (2 << 24)
+    }
+};
+
+
+// === function ===
+static __always_inline void echo_mac(struct ethhdr *eth_h) {
+    bpf_printk("Ether\n");
+    bpf_printk("  Source[0]: %x\n", eth_h->h_source[0]);
+    bpf_printk("  Source[1]: %x\n", eth_h->h_source[1]);
+    bpf_printk("  Source[2]: %x\n", eth_h->h_source[2]);
+    bpf_printk("  Source[3]: %x\n", eth_h->h_source[3]);
+    bpf_printk("  Source[4]: %x\n", eth_h->h_source[4]);
+    bpf_printk("  Source[5]: %x\n", eth_h->h_source[5]);
+    bpf_printk("  Destination[0]: %x\n", eth_h->h_dest[0]);
+    bpf_printk("  Destination[1]: %x\n", eth_h->h_dest[1]);
+    bpf_printk("  Destination[2]: %x\n", eth_h->h_dest[2]);
+    bpf_printk("  Destination[3]: %x\n", eth_h->h_dest[3]);
+    bpf_printk("  Destination[4]: %x\n", eth_h->h_dest[4]);
+    bpf_printk("  Destination[5]: %x\n", eth_h->h_dest[5]);
+    bpf_printk("  Ether type: %x\n", bpf_ntohs(eth_h->h_proto));
+};
+
+static __always_inline void echo_ipv4(struct iphdr *ip_h) {
+    bpf_printk("IP\n");
+    bpf_printk("  saddr[0]: %d\n", ip_h->saddr & 0xFF);
+    bpf_printk("  saddr[1]: %d\n", (ip_h->saddr >> 8) & 0xFF);
+    bpf_printk("  saddr[2]: %d\n", (ip_h->saddr >> 16) & 0xFF);
+    bpf_printk("  saddr[3]: %d\n", (ip_h->saddr >> 24) & 0xFF);
+    bpf_printk("  daddr[0]: %d\n", ip_h->daddr & 0xFF);
+    bpf_printk("  daddr[1]: %d\n", (ip_h->daddr >> 8) & 0xFF);
+    bpf_printk("  daddr[2]: %d\n", (ip_h->daddr >> 16) & 0xFF);
+    bpf_printk("  daddr[3]: %d\n", (ip_h->daddr >> 24) & 0xFF);
+};
+
+static __always_inline void echo_tcp(struct tcphdr *tcp_h) {
+    bpf_printk("TCP\n");
+    bpf_printk("  source port: %d\n", bpf_ntohs(tcp_h->source));
+    bpf_printk("  dest port: %d\n", bpf_ntohs(tcp_h->dest));
+}
+
+static __always_inline void echo_udp(struct udphdr *udp_h) {
+    bpf_printk("UDP\n");
+    bpf_printk("  source port: %d\n", bpf_ntohs(udp_h->source));
+    bpf_printk("  dest port: %d\n", bpf_ntohs(udp_h->dest));
+}
+
+static __always_inline void echo_gtp(struct gtphdr *gtp_h) {  // extension header 先不 print
+    bpf_printk("GTP-U\n");
+    bpf_printk("  version: %d\n", gtp_h->version);
+    bpf_printk("  protocol type: %d\n", gtp_h->pt);
+    bpf_printk("  reserve: %d\n", gtp_h->reserve);
+    bpf_printk("  extension header flag: %d\n", gtp_h->e);
+    bpf_printk("  sequence number flag: %d\n", gtp_h->s);
+    bpf_printk("  N-PDU number flag: %d\n", gtp_h->pn);
+    bpf_printk("  message type: 0x%x\n", gtp_h->message_type);
+    bpf_printk("  length: %d\n", bpf_ntohs(gtp_h->length));
+    bpf_printk("  TEID: 0x%x\n", bpf_ntohl(gtp_h->teid));
+    bpf_printk("  sequence number: %d\n", bpf_ntohs(gtp_h->seq));
+    bpf_printk("  N-PDU number: %d\n", gtp_h->n_pdu);
+    bpf_printk("  next extension header type: 0x%x\n", gtp_h->next_ext_hdr_type);
+}
+
+static __always_inline unsigned int snat(struct __sk_buff *skb, struct iphdr *ip_h, struct interface *from) {
+    // 我們有關 rp_filter
+    if (DEBUG_LEVEL >= SOME_INFO)
+        bpf_printk("- SNAT\n");
+    unsigned int csum = 0;
+    csum = bpf_csum_diff(&ip_h->saddr, 4, &from->ipv4, 4, csum);
+    // ----- change L4 header -----
+    if (ip_h->protocol == IPPROTO_TCP)
+        bpf_l4_csum_replace(skb, TCP_CSUM_OFF, 0, csum, 0);
+    else if (ip_h->protocol == IPPROTO_UDP)
+        bpf_l4_csum_replace(skb, UDP_CSUM_OFF, 0, csum, 0);
+    // ----- change L3 header -----
+    bpf_skb_store_bytes(skb, IP_SRC_OFF, &from->ipv4, 4, 0);
+    bpf_l3_csum_replace(skb, IP_CSUM_OFFSET, 0, csum, 0);
+    // ----- change L2 header -----
+    bpf_skb_store_bytes(skb, ETH_SRC_OFF, &from->mac, 6, 0);
+    return csum;
+};
+
+static __always_inline unsigned int dnat(struct __sk_buff *skb, struct iphdr *ip_h, struct interface *to) {
+    // 我們有關 rp_filter
+    if (DEBUG_LEVEL >= SOME_INFO)
+        bpf_printk("- DNAT\n");
+    unsigned int csum = 0;
+    csum = bpf_csum_diff(&ip_h->daddr, 4, &to->ipv4, 4, csum);
+    // ----- change L4 header -----
+    if (ip_h->protocol == IPPROTO_TCP)
+        bpf_l4_csum_replace(skb, TCP_CSUM_OFF, 0, csum, 0);
+    else if (ip_h->protocol == IPPROTO_UDP)
+        bpf_l4_csum_replace(skb, UDP_CSUM_OFF, 0, csum, 0);
+    // ----- change L3 header -----
+    bpf_skb_store_bytes(skb, IP_DST_OFF, &to->ipv4, 4, 0);
+    bpf_l3_csum_replace(skb, IP_CSUM_OFFSET, 0, csum, 0);
+    // ----- change L2 header -----
+    bpf_skb_store_bytes(skb, ETH_DST_OFF, &to->mac, 6, 0);
+    return csum;
+};
+
+static __always_inline unsigned int fnat(struct __sk_buff *skb, struct iphdr *ip_h, struct interface *from, struct interface *to) {
+    // 我們有關 rp_filter
+    if (DEBUG_LEVEL >= SOME_INFO)
+        bpf_printk("- Full NAT\n");
+    unsigned int csum = 0;
+    csum = bpf_csum_diff(&ip_h->saddr, 4, &from->ipv4, 4, csum);
+    csum = bpf_csum_diff(&ip_h->daddr, 4, &to->ipv4, 4, csum);
+    // ----- change L4 header -----
+    if (ip_h->protocol == IPPROTO_TCP)
+        bpf_l4_csum_replace(skb, TCP_CSUM_OFF, 0, csum, 0);
+    else if (ip_h->protocol == IPPROTO_UDP)
+        // bpf_l4_csum_replace(skb, UDP_CSUM_OFF, 0, csum, 0);
+        bpf_l4_csum_replace(skb, 0, 0, csum, 0);
+    // ----- change L3 header -----
+    bpf_skb_store_bytes(skb, IP_SRC_OFF, &from->ipv4, 4, 0);
+    bpf_skb_store_bytes(skb, IP_DST_OFF, &to->ipv4, 4, 0);
+    bpf_l3_csum_replace(skb, IP_CSUM_OFFSET, 0, csum, 0);
+    // ----- change L2 header -----
+    bpf_skb_store_bytes(skb, ETH_SRC_OFF, &from->mac, 6, 0);
+    bpf_skb_store_bytes(skb, ETH_DST_OFF, &to->mac, 6, 0);
+    return csum;
+}

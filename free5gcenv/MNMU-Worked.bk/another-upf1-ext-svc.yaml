@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: free5gc-upf-svc-1
+spec:
+  selector:
+    app: free5gc-upf-1
+  type: NodePort
+  clusterIP: 10.96.100.10
+  ports:
+    - name: pfcp
+      protocol: UDP
+      port: 8805
+      nodePort: 31805
+    - name: sbi
+      port: 29518
+      protocol: TCP
+      nodePort: 32518
+    - name: gtp
+      protocol: UDP
+      port: 2152
+      nodePort: 32152
