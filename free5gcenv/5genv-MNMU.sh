@@ -295,3 +295,6 @@ kubectl exec -it ${podname} -- ip a
 
 sudo kill -15 $(pidof tcpdump)
 sudo chown vp:vp ${curpath}/pfcp.pcap
+
+echo "If you need join a worker node:"
+kubeadm token create --print-join-command
